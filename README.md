@@ -44,7 +44,7 @@ Finally, candidates are routed by status:
 
 ## Workflow Architecture
 
-![Workflow Architecture](assets/workflow-architecture.png)
+![Workflow Architecture](workflow.png)
 
 ---
 
