@@ -4,7 +4,7 @@
 
 ---
 
-## 📌 Business Problem
+## Business Problem
 
 HR teams spend significant time manually reviewing resumes, comparing candidates with vacancy requirements, identifying missing skills, and deciding who should proceed to the next hiring stage.
 
@@ -14,7 +14,7 @@ The goal of this project is to automate the initial resume screening process whi
 
 ---
 
-## 🚀 Solution Overview
+## Solution Overview
 
 The workflow automatically receives candidate resumes from Gmail, downloads the attached PDF, extracts its text, and sends the resume content to an AI model.
 
@@ -42,13 +42,13 @@ Finally, candidates are routed by status:
 
 ---
 
-## 🏗 Workflow Architecture
+## Workflow Architecture
 
 ![Workflow Architecture](assets/workflow-architecture.png)
 
 ---
 
-## 🔄 Workflow
+## Workflow
 
 Gmail Resume Trigger
     ↓
@@ -75,7 +75,7 @@ Route Candidate Status
 
 ---
 
-## ✨ Features
+## Features
 
 - Automatic resume intake from Gmail
 - PDF attachment download
@@ -95,7 +95,7 @@ Route Candidate Status
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - n8n
 - Gmail API
@@ -107,7 +107,7 @@ Route Candidate Status
 
 ---
 
-## 🎯 Key Skills Demonstrated
+## Key Skills Demonstrated
 
 - Business process automation
 - Workflow architecture design
@@ -127,7 +127,7 @@ Route Candidate Status
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 ai-resume-screening-engine/
