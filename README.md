@@ -75,6 +75,9 @@ Route Candidate Status
 └── Rejected → End
 ```
 
+---
+
+
 ## Features
 
 - Automatic resume intake from Gmail
