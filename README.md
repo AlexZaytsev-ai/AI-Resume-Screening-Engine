@@ -50,30 +50,30 @@ Finally, candidates are routed by status:
 
 ## Workflow
 
+```text
 Gmail Resume Trigger
-    ↓
+        ↓
 Get Resume Email
-    ↓
+        ↓
 Extract Resume PDF
-    ↓
+        ↓
 Prepare Resume Text
-    ↓
+        ↓
 AI Candidate Evaluation
-    ↓
+        ↓
 Prepare Candidate Data
-    ↓
+        ↓
 Find Existing Candidate
-    ↓
+        ↓
 Candidate Exists?
-    ├── Yes → Update Candidate Record
-    └── No  → Create Candidate Record
-              ↓
+      ├── Yes → Update Candidate Record
+      └── No  → Create Candidate Record
+                ↓
 Route Candidate Status
-    ├── Approved → Notify HR
-    ├── Manual Review → Notify HR
-    └── Rejected → End
-
----
+├── Approved → Notify HR
+├── Manual Review → Notify HR
+└── Rejected → End
+```
 
 ## Features
 
