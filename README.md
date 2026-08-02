@@ -127,4 +127,12 @@ Route Candidate Status
 
 ---
 
+## Author
+
+**Alexander Zaytsev**
+
+AI Automation Engineer
+
+- GitHub: https://github.com/AlexZaytsev-ai
+- Email: polonix315@gmail.com
 
