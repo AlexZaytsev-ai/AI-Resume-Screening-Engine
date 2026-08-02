@@ -127,16 +127,4 @@ Route Candidate Status
 
 ---
 
-## Repository Structure
 
-```text
-ai-resume-screening-engine/
-├── README.md
-├── workflow/
-│   └── ai-resume-screening-engine.json
-├── assets/
-│   └── workflow-architecture.png
-├── prompts/
-│   └── system-prompt.md
-└── schemas/
-    └── candidate-evaluation-schema.json
