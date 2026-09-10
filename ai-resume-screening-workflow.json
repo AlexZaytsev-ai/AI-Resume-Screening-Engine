@@ -1,0 +1,1217 @@
+{
+  "name": "AI Resume Screening Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -992,
+        -112
+      ],
+      "id": "0cbad394-1d27-4bb5-9a84-8c35e12e3ed2",
+      "name": "Gmail Resume Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        -112
+      ],
+      "id": "a4b71e7d-55ff-4bfe-994b-da01002596b6",
+      "name": "Get Resume Email"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -592,
+        -112
+      ],
+      "id": "81baf3d0-80dc-4a55-810f-0549404c3145",
+      "name": "Extract Resume PDF"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0dd67c2-1b8d-4bd1-8e1e-61b1331263e3",
+              "name": "resume_text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -112
+      ],
+      "id": "5bfe5ac7-3517-4caf-94e7-1ebfdaa0aa5a",
+      "name": "Prepare Resume Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f03747f-00d8-4974-9bb7-eb985242ecab",
+              "name": "candidate_name",
+              "value": "={{ $json.output[0].content[0].text.candidate_name }}",
+              "type": "string"
+            },
+            {
+              "id": "3770552e-f9b4-4603-8e86-3eb391d89ab1",
+              "name": "years_of_relevant_experience",
+              "value": "={{ $json.output[0].content[0].text.years_of_relevant_experience }}",
+              "type": "number"
+            },
+            {
+              "id": "e88cff93-ca41-47f8-9cb2-847fba006bad",
+              "name": "technical_skills",
+              "value": "={{ $json.output[0].content[0].text.technical_skills }}",
+              "type": "array"
+            },
+            {
+              "id": "5cb8637a-f5d7-42d6-838b-c486a692cf10",
+              "name": "required_skills_match",
+              "value": "={{ $json.output[0].content[0].text.required_skills_match }}",
+              "type": "array"
+            },
+            {
+              "id": "7eff375f-0f6f-4797-8787-09ea761c4268",
+              "name": "missing_required_skills",
+              "value": "={{ $json.output[0].content[0].text.missing_required_skills }}",
+              "type": "array"
+            },
+            {
+              "id": "6635fdb0-bd93-4331-9224-e2bb0408d944",
+              "name": "strengths",
+              "value": "={{ $json.output[0].content[0].text.strengths }}",
+              "type": "array"
+            },
+            {
+              "id": "4e0fb883-594e-45c7-9004-bc7fd33dcceb",
+              "name": "score",
+              "value": "={{ $json.output[0].content[0].text.score }}",
+              "type": "number"
+            },
+            {
+              "id": "25bb63fc-59cc-40c4-bdf9-01c28bc97832",
+              "name": "reason",
+              "value": "={{ $json.output[0].content[0].text.reason }}",
+              "type": "string"
+            },
+            {
+              "id": "a764ad8f-3dc4-41a7-ace9-4c99889adedf",
+              "name": "candidate_email",
+              "value": "={{ $('Get Resume Email').item.json.replyTo?.value?.[0]?.address || $('Get Resume Email').item.json.from.value[0].address }}",
+              "type": "string"
+            },
+            {
+              "id": "7bb647dc-65d7-471c-9914-84226bd91a90",
+              "name": "vacancy_name",
+              "value": "AI Automation Specialist",
+              "type": "string"
+            },
+            {
+              "id": "8a0a1aaf-8ce1-49c2-8eb2-fc7112db8bf4",
+              "name": "updated_at",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        128,
+        -112
+      ],
+      "id": "25f6e354-6e70-477f-b9ff-85dc06b3867b",
+      "name": "Prepare Candidate Data"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "candidate_email",
+              "lookupValue": "={{ $json.candidate_email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -112
+      ],
+      "id": "db9fe9d1-e453-4133-b77e-551a36b59bdf",
+      "name": "Find Existing Candidate",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c83769ce-9056-4d9d-b817-4dc36a8ebe92",
+              "leftValue": "={{ $json.row_number != null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        -112
+      ],
+      "id": "428d9a4b-25f7-4608-a272-2e66514be6ae",
+      "name": "Candidate Exists?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "candidate_email": "={{ $('Prepare Candidate Data').item.json.candidate_email }}",
+            "candidate_name": "={{ $('Prepare Candidate Data').item.json.candidate_name }}",
+            "vacancy_name": "={{ $('Prepare Candidate Data').item.json.vacancy_name }}",
+            "years_of_relevant_experience": "={{ $('Prepare Candidate Data').item.json.years_of_relevant_experience }}",
+            "technical_skills": "={{ $('Prepare Candidate Data').item.json.technical_skills.join(', ') }}",
+            "required_skills_match": "={{ $('Prepare Candidate Data').item.json.required_skills_match.join(', ') }}",
+            "missing_required_skills": "={{ $('Prepare Candidate Data').item.json.missing_required_skills.join(', ') }}",
+            "strengths": "={{ $('Prepare Candidate Data').item.json.strengths.join(', ') }}",
+            "score": "={{ $('Prepare Candidate Data').item.json.score }}",
+            "status": "pending_validation",
+            "reason": "={{ $('Prepare Candidate Data').item.json.reason }}",
+            "updated_at": "={{ $('Prepare Candidate Data').item.json.updated_at }}"
+          },
+          "matchingColumns": [
+            "candidate_email"
+          ],
+          "schema": [
+            {
+              "id": "candidate_email",
+              "displayName": "candidate_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "candidate_name",
+              "displayName": "candidate_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "vacancy_name",
+              "displayName": "vacancy_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "years_of_relevant_experience",
+              "displayName": "years_of_relevant_experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "technical_skills",
+              "displayName": "technical_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "required_skills_match",
+              "displayName": "required_skills_match",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "missing_required_skills",
+              "displayName": "missing_required_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "strengths",
+              "displayName": "strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        -240
+      ],
+      "id": "4b675a2c-2ef9-4bd6-b959-62464d63a6d0",
+      "name": "Update Candidate Record",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "candidate_email": "={{ $('Prepare Candidate Data').item.json.candidate_email }}",
+            "candidate_name": "={{ $('Prepare Candidate Data').item.json.candidate_name }}",
+            "vacancy_name": "={{ $('Prepare Candidate Data').item.json.vacancy_name }}",
+            "years_of_relevant_experience": "={{ $('Prepare Candidate Data').item.json.years_of_relevant_experience }}",
+            "technical_skills": "={{ $('Prepare Candidate Data').item.json.technical_skills.join(', ') }}",
+            "required_skills_match": "={{ $('Prepare Candidate Data').item.json.required_skills_match.join(', ') }}",
+            "missing_required_skills": "={{ $('Prepare Candidate Data').item.json.missing_required_skills.join(', ') }}",
+            "strengths": "={{ $('Prepare Candidate Data').item.json.strengths.join(', ') }}",
+            "score": "={{ $('Prepare Candidate Data').item.json.score }}",
+            "status": "pending_validation",
+            "reason": "={{ $('Prepare Candidate Data').item.json.reason }}",
+            "updated_at": "={{ $('Prepare Candidate Data').item.json.updated_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidate_email",
+              "displayName": "candidate_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "candidate_name",
+              "displayName": "candidate_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "vacancy_name",
+              "displayName": "vacancy_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "years_of_relevant_experience",
+              "displayName": "years_of_relevant_experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "technical_skills",
+              "displayName": "technical_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "required_skills_match",
+              "displayName": "required_skills_match",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "missing_required_skills",
+              "displayName": "missing_required_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "strengths",
+              "displayName": "strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        32
+      ],
+      "id": "b588625c-2fd8-4455-82ea-30c23227bbf2",
+      "name": "Create Candidate Record",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1165b144-5945-42c0-a152-95486ab210a7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "63412b69-b858-4ce0-854a-a5e691870f01",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "manual_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "manual_review"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4b1d081a-0378-4810-8000-61b0ca7a18fe",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "rejected",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rejected"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        -144
+      ],
+      "id": "c67c0abd-6457-400d-9cab-fcd030f2a2fe",
+      "name": "Route Candidate Status"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_HR_APPROVED_CHAT_ID",
+        "text": "=✅ Новый подходящий кандидат\n\nИмя: {{ $('Prepare Candidate Data').item.json.candidate_name }}\nEmail: {{ $('Prepare Candidate Data').item.json.candidate_email }}\nВакансия: {{ $('Prepare Candidate Data').item.json.vacancy_name }}\nОпыт: {{ $('Prepare Candidate Data').item.json.years_of_relevant_experience }} лет\nОценка: {{ $('Prepare Candidate Data').item.json.score }}/100\n\nСильные стороны:\n{{ $('Prepare Candidate Data').item.json.strengths.join(', ') }}\n\nПричина решения:\n{{ $('Prepare Candidate Data').item.json.reason }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        -240
+      ],
+      "id": "2be1d6f4-0b70-4ed2-bacb-95150a96e15e",
+      "name": "Notify HR — Approved"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_HR_MANUAL_REVIEW_CHAT_ID",
+        "text": "=⚠️ Кандидат требует ручной проверки\n\nИмя: {{ $('Prepare Candidate Data').item.json.candidate_name }}\nEmail: {{ $('Prepare Candidate Data').item.json.candidate_email }}\nВакансия: {{ $('Prepare Candidate Data').item.json.vacancy_name }}\nОпыт: {{ $('Prepare Candidate Data').item.json.years_of_relevant_experience }} лет\nОценка: {{ $('Prepare Candidate Data').item.json.score }}/100\n\nСовпавшие навыки:\n{{ $('Prepare Candidate Data').item.json.required_skills_match.join(', ') }}\n\nНедостающие навыки:\n{{ $('Prepare Candidate Data').item.json.missing_required_skills.join(', ') }}\n\nПричина:\n{{ $('Prepare Candidate Data').item.json.reason }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        -96
+      ],
+      "id": "11ed1ea5-0d86-412f-a301-3b7d5818574a",
+      "name": "Notify HR — Manual Review"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "GPT-5.2"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an experienced HR assistant.\n\nYou will receive the text of a candidate's resume.\n\nYour task is to analyze the resume and compare it with the following job requirements.\n\nJob Position:\nAI Automation Specialist\n\nRequired Skills:\n- n8n\n- REST API\n- JSON\n- Webhooks\n\nPreferred Skills:\n- OpenAI API\n- Telegram Bot API\n- Google Sheets API\n\nMinimum Experience:\n1 year of commercial experience.\n\nInstructions:\n\n1. Extract the candidate's name.\n2. Estimate years of relevant experience.\n3. Identify the candidate's technical skills.\n4. Compare the resume with the required and preferred skills.\n5. List the candidate's strengths.\n6. List the missing skills or weaknesses.\n7. Give a score from 0 to 100.\n8. Briefly explain the score and overall candidate evaluation.\n\nReturn ONLY structured JSON.\nDo not include markdown or additional text.\nDo not invent information that is missing from the resume.\n\nRelevant experience means commercial experience directly related to AI Automation, n8n, APIs, JSON, Webhooks, or similar technologies.\n\nDo not count unrelated work experience such as courier, driver, warehouse, or retail jobs as relevant experience.\n\nВсе значения с обычным текстом возвращай на русском языке. Названия Названия JSON-полей оставь на английском."
+            },
+            {
+              "content": "={{ $json.resume_text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "schema": "{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"properties\": {\n    \"candidate_name\": {\n      \"type\": \"string\"\n    },\n    \"years_of_relevant_experience\": {\n      \"type\": \"number\"\n    },\n    \"technical_skills\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required_skills_match\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"missing_required_skills\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"strengths\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"weaknesses\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"score\": {\n      \"type\": \"integer\",\n      \"minimum\": 0,\n      \"maximum\": 100\n    },\n    \"reason\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"candidate_name\",\n    \"years_of_relevant_experience\",\n    \"technical_skills\",\n    \"required_skills_match\",\n    \"missing_required_skills\",\n    \"strengths\",\n    \"weaknesses\",\n    \"score\",\n    \"reason\"\n  ]\n}"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        -112
+      ],
+      "id": "d1045b41-180c-40c5-9197-91933f712744",
+      "name": "AI Candidate Evaluation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_VALIDATION_API_URL/candidates/validate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "score",
+              "value": "={{ $('Prepare Candidate Data').item.json.score }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        80
+      ],
+      "id": "94e41d72-4a00-4a6c-83df-8d9e7731721a",
+      "name": "Validate Candidate Score API",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30f82d24-cd1d-4995-9482-b98b7efc7aa8",
+              "leftValue": "={{ $json.error.status }}",
+              "rightValue": 400,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        224
+      ],
+      "id": "33913de9-849f-4ff4-94ca-0146e10650bb",
+      "name": "Is HTTP 400?"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1168,
+        -112
+      ],
+      "id": "1c6c14d8-1982-47e4-9d09-d144cca9d00a",
+      "name": "Merge Candidate Data and Validation"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_HR_API_ERROR_CHAT_ID",
+        "text": "=🚨 <b>Требуется ручная проверка</b>\n\nНе удалось автоматически проверить score кандидата.\n\nКандидат: {{ $('Prepare Candidate Data').item.json.candidate_name }}\nEmail: {{ $('Prepare Candidate Data').item.json.candidate_email }}\nScore от AI: {{ $('Prepare Candidate Data').item.json.score }}\n\nПричина: техническая ошибка Candidate Validation API.\nКандидат сохранён в таблицу. Проверьте резюме вручную.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        400
+      ],
+      "id": "aead5732-6458-42e1-a155-9334e4749967",
+      "name": "Notify HR — API Error 500"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_HR_INVALID_SCORE_CHAT_ID",
+        "text": "=⚠️ <b>Требуется ручная проверка данных</b>\n\nAPI не принял score кандидата.\n\nКандидат: {{ $('Prepare Candidate Data').item.json.candidate_name }}\nEmail: {{ $('Prepare Candidate Data').item.json.candidate_email }}\nScore от AI: {{ $('Prepare Candidate Data').item.json.score }}\n\nПричина: {{ $json.details.description }}\n\nПроверьте score и резюме вручную.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        208
+      ],
+      "id": "8b8258fe-65a1-47f3-aa41-6b2217752b38",
+      "name": "Notify HR — Invalid Score 400"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "candidate_email": "={{ $('Prepare Candidate Data').item.json.candidate_email }}",
+            "status": "={{ $json.status }}",
+            "updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "candidate_email"
+          ],
+          "schema": [
+            {
+              "id": "candidate_email",
+              "displayName": "candidate_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "candidate_name",
+              "displayName": "candidate_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "vacancy_name",
+              "displayName": "vacancy_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "years_of_relevant_experience",
+              "displayName": "years_of_relevant_experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "technical_skills",
+              "displayName": "technical_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "required_skills_match",
+              "displayName": "required_skills_match",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "missing_required_skills",
+              "displayName": "missing_required_skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "strengths",
+              "displayName": "strengths",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1344,
+        -112
+      ],
+      "id": "49fb0ab7-dfa4-47e8-bff8-18482a3eeba5",
+      "name": "Save Official Candidate Status",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Resume Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Resume Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Resume Email": {
+      "main": [
+        [
+          {
+            "node": "Extract Resume PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Resume PDF": {
+      "main": [
+        [
+          {
+            "node": "Prepare Resume Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Resume Text": {
+      "main": [
+        [
+          {
+            "node": "AI Candidate Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Candidate Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Candidate Score API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find Existing Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Existing Candidate": {
+      "main": [
+        [
+          {
+            "node": "Candidate Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate Exists?": {
+      "main": [
+        [
+          {
+            "node": "Update Candidate Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Candidate Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Candidate Record": {
+      "main": [
+        [
+          {
+            "node": "Merge Candidate Data and Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Candidate Record": {
+      "main": [
+        [
+          {
+            "node": "Merge Candidate Data and Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Candidate Status": {
+      "main": [
+        [
+          {
+            "node": "Notify HR — Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify HR — Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Notify HR — Manual Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Candidate Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Prepare Candidate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Candidate Score API": {
+      "main": [
+        [
+          {
+            "node": "Merge Candidate Data and Validation",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Is HTTP 400?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is HTTP 400?": {
+      "main": [
+        [
+          {
+            "node": "Notify HR — Invalid Score 400",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify HR — API Error 500",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Candidate Data and Validation": {
+      "main": [
+        [
+          {
+            "node": "Save Official Candidate Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Official Candidate Status": {
+      "main": [
+        [
+          {
+            "node": "Route Candidate Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": []
+}
