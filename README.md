@@ -1,141 +1,135 @@
 # AI Resume Screening Engine
 
-> Automatically processes candidate resumes from Gmail, extracts PDF content, evaluates candidates against job requirements using AI, stores results in Google Sheets, and notifies HR about relevant applicants.
+[Русская версия](README_RU.md)
+
+AI-assisted resume screening workflow built with n8n. It receives PDF resumes from Gmail, evaluates candidates, stores them in Google Sheets, validates the official status through a deterministic API, and notifies HR.
 
 ---
 
 ## Business Problem
 
-HR teams spend significant time manually reviewing resumes, comparing candidates with vacancy requirements, identifying missing skills, and deciding who should proceed to the next hiring stage.
+Manual resume screening is repetitive, time-consuming, and difficult to scale. It can also produce inconsistent candidate decisions.
 
-This process is repetitive, time-consuming, and difficult to scale when the company receives a large number of applications.
-
-The goal of this project is to automate the initial resume screening process while keeping the final hiring decision under human control.
-
----
-
-## Solution Overview
-
-The workflow automatically receives candidate resumes from Gmail, downloads the attached PDF, extracts its text, and sends the resume content to an AI model.
-
-The AI evaluates the candidate against predefined requirements for an AI Automation Specialist position and returns structured data, including:
-
-- relevant experience;
-- technical skills;
-- matched required skills;
-- missing required skills;
-- strengths;
-- score;
-- candidate status;
-- explanation of the decision.
-
-The workflow then checks whether the candidate already exists in Google Sheets.
-
-- Existing candidates are updated.
-- New candidates are added as new records.
-
-Finally, candidates are routed by status:
-
-- `approved` — HR receives a Telegram notification;
-- `manual_review` — HR receives a manual review notification;
-- `rejected` — the result is stored without sending a notification.
+This workflow automates the initial evaluation while keeping status rules deterministic and the final hiring decision under human control.
 
 ---
 
 ## Workflow Architecture
 
-![Workflow Architecture](workflowResume.png)
+```text
+Gmail → PDF Extraction → AI Evaluation → Prepare Candidate Data
+                                      ├→ Find Candidate by Email
+                                      │    ├→ Update Existing
+                                      │    └→ Create New
+                                      │           ↓
+                                      │    pending_validation
+                                      │           ↓
+                                      │       Merge Input 1
+                                      │
+                                      └→ Validation API
+                                           ├→ Success → Merge Input 2
+                                           └→ Error → Notify HR
+
+Merge → Save Official Status → Route Status
+                              ├→ approved → Notify HR
+                              ├→ manual_review → Notify HR
+                              └→ rejected → Stop
+```
 
 ---
 
 ## Workflow
 
-```text
-Gmail Resume Trigger
-        ↓
-Get Resume Email
-        ↓
-Extract Resume PDF
-        ↓
-Prepare Resume Text
-        ↓
-AI Candidate Evaluation
-        ↓
-Prepare Candidate Data
-        ↓
-Find Existing Candidate
-        ↓
-Candidate Exists?
-      ├── Yes → Update Candidate Record
-      └── No  → Create Candidate Record
-                ↓
-Route Candidate Status
-├── Approved → Notify HR
-├── Manual Review → Notify HR
-└── Rejected → End
-```
+![AI Resume Screening Engine workflow](workflowResume.png)
 
 ---
 
+## How It Works
 
-## Features
+1. Gmail receives an email with a PDF resume.
+2. n8n extracts the text from the PDF.
+3. OpenAI evaluates experience, skills, strengths, missing requirements, and produces a score from 0 to 100.
+4. A strict JSON Schema guarantees predictable structured fields.
+5. Google Sheets finds the candidate by email and either creates or updates the record.
+6. The record is temporarily saved with `pending_validation`.
+7. The external API converts the AI score into an official status.
+8. The same candidate row is updated with the API status.
+9. HR receives the appropriate Telegram notification.
 
-- Automatic resume intake from Gmail
-- PDF attachment download
-- Text extraction from PDF resumes
-- AI-powered candidate evaluation
-- Structured JSON output using JSON Schema
-- Candidate scoring from 0 to 100
-- Candidate classification:
-  - approved
-  - manual_review
-  - rejected
-- Duplicate candidate detection by email
-- Automatic candidate record update
-- New candidate creation
-- Google Sheets candidate database
-- Telegram notifications for relevant candidates
+---
+
+## Validation Rules
+
+| Score  | Official status |
+| ------ | --------------- |
+| 0–49   | `rejected`      |
+| 50–89  | `manual_review` |
+| 90–100 | `approved`      |
+
+The API returns HTTP `400` for invalid score data. Other API errors follow a separate technical-error notification path.
+
+Validation API repository:
+
+[candidate-validation-api](https://github.com/AlexZaytsev-ai/candidate-validation-api)
+
+---
+
+## Key Architecture Decisions
+
+* AI analyzes the resume and proposes a score but does not assign the official status.
+* The Validation API is the source of truth for candidate status.
+* Candidate email is the business key used to prevent duplicates.
+* Candidates are saved independently of the API response.
+* Until validation succeeds, the status remains `pending_validation`.
+* API failures are sent to HR for manual processing.
+* The final hiring decision remains under human control.
 
 ---
 
 ## Tech Stack
 
-- n8n
-- Gmail API
-- OpenAI API
-- Google Sheets API
-- Telegram Bot API
-- JSON Schema
-- PDF text extraction
+| Technology            | Purpose                         |
+| --------------------- | ------------------------------- |
+| n8n                   | Workflow automation             |
+| Gmail API             | Resume intake                   |
+| OpenAI API            | Resume analysis and scoring     |
+| JSON Schema           | Strict structured output        |
+| Google Sheets API     | Candidate registry              |
+| Node.js / Express API | Deterministic status validation |
+| Telegram Bot API      | HR notifications                |
 
 ---
 
-## Key Skills Demonstrated
+## Import and Setup
 
-- Business process automation
-- Workflow architecture design
-- Email-triggered automation
-- Binary file processing
-- PDF data extraction
-- Prompt engineering
-- Structured AI output
-- JSON Schema design
-- Data normalization
-- Candidate scoring logic
-- Conditional routing
-- Duplicate detection
-- Update-or-create logic
-- Google Sheets integration
-- Telegram notification automation
+The public export does not contain credentials, Google Sheets IDs, Telegram chat IDs, or a private API URL.
+
+1. Import `ai-resume-screening-workflow.json` into n8n.
+2. Configure Gmail, OpenAI, Google Sheets, and Telegram credentials.
+3. Select the candidate spreadsheet in all Google Sheets nodes.
+4. Replace `YOUR_VALIDATION_API_URL` with the URL accessible from n8n.
+5. Replace the Telegram chat ID placeholders.
+6. Test new candidate, existing candidate, and API error scenarios.
+7. Activate the workflow after successful testing.
+
+---
+
+## Tested Scenarios
+
+* A new candidate is created with a numeric score.
+* An existing candidate is updated without creating a duplicate.
+* The initial `pending_validation` status is replaced by the official API status.
+* A score of `2` produces `rejected`.
+* Candidate data remains stored if the API fails.
+* HTTP `400` and other API errors follow separate notification paths.
 
 ---
 
 ## Author
 
-**Alexander Zaytsev**
+Alexander Zaytsev
 
 AI Automation Engineer
 
-- GitHub: https://github.com/AlexZaytsev-ai
-- Email: polonix315@gmail.com
-
+* GitHub: https://github.com/AlexZaytsev-ai
+* Email: [polonix315@gmail.com](mailto:polonix315@gmail.com)
